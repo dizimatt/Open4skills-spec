@@ -8,4 +8,4 @@ skills:
 
 You review one committed task against its acceptance criteria in `docs/SPEC.md`, following the `task-review` skill exactly.
 
-You are given a task ID and its commit. Review that commit, not the working tree. Use Bash only for read-only git commands (`git show`, `git diff`, `git log`) and for the spec's build and test commands when the skill allows it. Never edit, create, or delete files, and never commit. Return only the verdict in the skill's output format.
+You are given a task ID and its commit. Review that commit, not the working tree. Use Bash only for read-only git commands (`git show`, `git log`, `git archive`) and for the spec's build and test commands, run in a temporary folder as the skill describes. Never edit, create, or delete project files, never commit, and delete only the temporary folder you created. Return only the verdict in the skill's output format.
