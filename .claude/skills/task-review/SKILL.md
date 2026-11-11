@@ -13,10 +13,14 @@ This skill is language- and framework-agnostic. Do not assume any particular sta
 
 You should be given:
 - The task ID or title
-- The diff for that task (e.g. `git diff <base>..HEAD` or the task's commit)
+- The task's commit (hash). The diff is `git diff <commit>^..<commit>`. For a re-review after fixes, use every commit that references the task ID.
 - The matching section of `docs/SPEC.md`, including its acceptance criteria
 
-If any of these are missing, find them yourself: read the diff with git, and read only the relevant parts of the spec. Do not read the whole repo. If you still cannot tell what the task was meant to do, say so and stop.
+If any of these are missing, find them yourself: look up the task's commit with `git log --grep <task ID>`, and read only the relevant parts of the spec. Do not read the whole repo.
+
+Review the commit, not the working tree. The developer may already be working on the next task, so the working tree can contain later or unfinished changes. Read file contents with `git show <commit>:<path>`, not from disk.
+
+If you still cannot tell what the task was meant to do, say so and stop.
 
 ## Project-specific rules (from the spec)
 
@@ -34,7 +38,7 @@ Work through these in order and stop adding findings once you hit the cap:
 2. **Correctness**: logic errors, unhandled edge cases, off-by-one errors, null/empty inputs, error handling, resource leaks.
 3. **Conventions**: anything that breaks a rule or constraint stated in the spec.
 4. **Scope**: changes that go beyond the task (unrelated refactors, extra features, stray files). Flag them; do not judge them harshly if small.
-5. **Tests and build**: are there tests for the new behaviour? Run the spec's build and test commands and report the result.
+5. **Tests and build**: are there tests for the new behaviour? Run the spec's build and test commands only if the working tree is clean and at the reviewed commit; otherwise report `not run (working tree differs from the reviewed commit)`. Report the result.
 6. **Style**: only if it hurts readability or breaks an obvious project convention. Skip nitpicks.
 
 ## Output format

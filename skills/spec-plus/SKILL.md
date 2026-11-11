@@ -96,7 +96,7 @@ Platforms, tools, limits, preferences. Keep short. Include the Builder model lin
 - Q-001 <open question>
 
 ## 7. Task backlog
-- T-001 <task> — Requirements: R-001 — Status: todo
+- T-001 <task> — Requirements: R-001 — Status: todo | in-review | done
 - T-002 ...
 (Each task references at least one requirement ID. Order tasks so the earliest ones produce something runnable.)
 
@@ -134,7 +134,7 @@ Task card format in docs/TASKS.md:
 - Interface: exact signature(s) or data shape
 - Example: input -> expected output
 - Done when: runnable command, or observable playtest step
-- Status: todo
+- Status: todo | in-review | done
 ```
 
 Cards must not contradict SPEC.md. The spec wins if they differ.
@@ -178,8 +178,20 @@ Ask the user to approve or request changes. On approval, set `Status: Approved` 
 
 Tell the user they can now say things like "build T-001" and you will work from `docs/SPEC.md` (and the task card, for tiers B-D). When building:
 - Reference requirement and task IDs in commit messages and test names.
-- Mark tasks `done` in the backlog (and the card) as they are completed and verified.
+- Commit each task on its own, with its task ID in the commit message, so it can be reviewed as a single commit.
+- Mark tasks `done` in the backlog (and the card) only after they are completed and verified. If the project uses the `task-review` skill, a committed task is `in-review` until the review returns PASS, then `done`.
 - If implementation reveals the spec is wrong or incomplete, say so, propose the spec change, and log it rather than silently drifting from the spec.
+
+## Reviewing tasks (optional)
+
+If the `task-review` skill is in the project, the developer can ask for a review of a committed task, for example "review T-003". Run it as a read-only subagent on that task's commit so the next task can proceed meanwhile. Rules:
+
+- Review only a committed task, and give the reviewer the commit, never "the latest changes".
+- Keep **one review in flight** at a time. Do not start a second until the first returns.
+- Only start the next task while a review is running if it does not depend on the task under review (no shared files or interfaces it changes). Otherwise wait for the verdict.
+- On **PASS**, set the task to `done` (backlog and card).
+- On **CHANGES-NEEDED**, set the task back to `todo`, fix the findings in a new commit that references the task ID, set it to `in-review`, and request a fresh review of the task's commits. Finish the fix before starting any other review.
+- If a finding shows the spec itself is wrong, propose a spec change and log it, as in the section above.
 
 ## If a spec already exists
 
