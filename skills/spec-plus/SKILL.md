@@ -34,7 +34,7 @@ Cover these topics in roughly this order, adapting wording to the project. Skip 
 7. **What "done" feels like** — how will the user know the MVP works and is good enough?
 8. **Edge cases and failure** — what should happen when things go wrong or input is odd? (Propose defaults.)
 9. **Type-specific questions** (pick 2-3 from the bank below).
-10. **Builder model and constraints** — which LLM builds it (Step 3), plus any required tools, platforms, languages, or things to avoid. Propose defaults based on what you can see in the repo.
+10. **Builder model and constraints** — which LLM builds it (Step 3), plus any required tools, platforms, languages, or things to avoid, and the commands to build and test it (or "none" for projects checked by playtest). Propose defaults based on what you can see in the repo.
 
 ### Type-specific question bank
 
@@ -89,7 +89,8 @@ Who uses it, and the main journey as numbered steps.
 Bullet list of things deliberately excluded from this version.
 
 ## 5. Constraints and technical notes
-Platforms, tools, limits, preferences. Keep short. Include the Builder model line.
+Platforms, tools, limits, preferences. Keep short. Include the Builder model line and a build/test line:
+`Build/test commands: <build command>; <test command>` (or `none - checked by playtest`). The `task-review` skill reads this line.
 
 ## 6. Assumptions and open questions
 - A-001 <assumption> — proposed default, needs confirmation
@@ -155,6 +156,12 @@ For tiers B-D only, also:
 Task cards: docs/TASKS.md. Builder model and context limits are in SPEC section 5.
 ```
 
+If the `task-review` skill is in the project, also add this to `CLAUDE.md` (any tier):
+
+```
+Task review: after committing a task, the developer may say "review T-xxx". Run the task-review skill as a read-only subagent on that commit (see "Reviewing tasks" in the spec-plus skill).
+```
+
 If a local agent tool is named (Aider, Cline), tell the user to load docs/SPEC.md and the current task card as read-only context, since that tool will not read CLAUDE.md.
 
 ## Step 7: Review pass
@@ -164,6 +171,7 @@ Before presenting, re-read the spec as a sceptical reviewer and check:
 - No two requirements contradict each other.
 - Out-of-scope items are not smuggled back in as requirements.
 - Every assumption is listed in section 6.
+- Section 5 has a Build/test commands line.
 - The task order yields something runnable early.
 - For tiers B-D: every task has a card, each card names its files and a check, and no card exceeds the tier's size limit.
 
