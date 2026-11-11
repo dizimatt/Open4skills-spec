@@ -8,67 +8,70 @@ It writes `docs/SPEC.md` (requirements with stable IDs and acceptance criteria, 
 
 ```
 Open4skills-spec/
-├── README.md                  # this file
-├── install.sh                 # optional helper that copies the skill into place
-└── skills/
-    └── spec-plus/
-        └── SKILL.md           # the skill itself
+├── README.md
+├── install.sh                       # copies the skills and agent into place
+└── .claude/
+    ├── skills/
+    │   ├── spec-plus/SKILL.md       # idea -> spec and task backlog
+    │   └── task-review/SKILL.md     # review one committed task against the spec
+    └── agents/
+        └── task-reviewer.md         # optional read-only subagent for task-review
 ```
 
-`skills/spec-plus/SKILL.md` is the source copy kept in this repo. Claude Code does **not** read it from here; it must be copied into one of the locations below.
+The repo uses the same layout Claude Code expects, so opening this repo in Claude Code loads the skills directly. To use them in another project, copy them there as described below.
 
-## Installing the skill
+| Item | Purpose |
+|------|---------|
+| `spec-plus` | Interviews you and writes `docs/SPEC.md` (and `docs/TASKS.md` for local models) |
+| `task-review` | Reviews one task's commit against its acceptance criteria and returns PASS or CHANGES-NEEDED |
+| `task-reviewer` (agent) | Optional. Runs `task-review` as a subagent with restricted tools, so work on the next task can continue |
 
-Claude Code discovers skills by looking for a folder containing a file named exactly `SKILL.md` (uppercase) inside a `skills/` directory in specific locations. The folder name becomes the slash command (`spec-plus` gives `/spec-plus`).
+## Installing
+
+Claude Code discovers skills by looking for a folder containing a file named exactly `SKILL.md` (uppercase) inside a `skills/` directory in specific locations. The folder name becomes the slash command (`spec-plus` gives `/spec-plus`). Agents are single `.md` files in an `agents/` directory in the same places.
 
 ### Option A: personal install (available in every project)
 
 ```
 ~/.claude/skills/spec-plus/SKILL.md
+~/.claude/skills/task-review/SKILL.md
+~/.claude/agents/task-reviewer.md
 ```
 
 ```bash
-mkdir -p ~/.claude/skills/spec-plus
-cp skills/spec-plus/SKILL.md ~/.claude/skills/spec-plus/SKILL.md
-```
-
-On Windows (PowerShell):
-
-```powershell
-New-Item -ItemType Directory -Force "$HOME\.claude\skills\spec-plus"
-Copy-Item skills\spec-plus\SKILL.md "$HOME\.claude\skills\spec-plus\SKILL.md"
+./install.sh
 ```
 
 ### Option B: project install (shared with everyone working on one repo)
 
-Run from the root of the project that should have the skill:
-
 ```
 <your-project>/.claude/skills/spec-plus/SKILL.md
+<your-project>/.claude/skills/task-review/SKILL.md
+<your-project>/.claude/agents/task-reviewer.md
 ```
 
 ```bash
-mkdir -p .claude/skills/spec-plus
-cp /path/to/Open4skills-spec/skills/spec-plus/SKILL.md .claude/skills/spec-plus/SKILL.md
+./install.sh /path/to/your-project
 ```
 
-Commit `.claude/skills/` so teammates get the skill when they clone.
-
-### Using the helper script
+Or copy the folders by hand from the root of this repo:
 
 ```bash
-./install.sh                      # personal install
-./install.sh /path/to/project     # project install
+mkdir -p /path/to/your-project/.claude
+cp -r .claude/skills .claude/agents /path/to/your-project/.claude/
 ```
+
+Commit `.claude/` in your project so teammates get the skills when they clone. The `task-review` skill and `task-reviewer` agent are optional; `spec-plus` works without them.
 
 ### Placement checklist
 
-Claude Code will silently ignore the skill if any of these are wrong:
+Claude Code will silently ignore a skill if any of these are wrong:
 
 - The file is named `SKILL.md`, uppercase, not `skill.md` or `SKILL_2.md`.
 - It sits one folder deep: `.../skills/spec-plus/SKILL.md`, not `.../skills/SKILL.md`.
 - The folder is under `.claude/skills/` (note the leading dot), either in your home directory or at the root of the project.
 - The YAML front matter at the top of the file is intact (`name` and `description`, between `---` lines).
+- Agent files sit directly in `.claude/agents/`, for example `.claude/agents/task-reviewer.md`.
 
 ## Verifying it works
 
@@ -105,6 +108,17 @@ After you approve the spec, say things like "build T-001" and Claude works from 
 
 If you use Aider or Cline, load `docs/SPEC.md` and the current task card as read-only context, since those tools do not read `CLAUDE.md`.
 
+## Reviewing tasks (optional)
+
+With `task-review` installed in the project, commit each task on its own (with the task ID in the message), then say "review T-003". Claude runs the review on that commit, ideally through the `task-reviewer` agent, while you carry on with the next task.
+
+- Only one review runs at a time.
+- Only start the next task during a review if it does not depend on the task being reviewed.
+- Task status moves `todo` to `in-review` to `done`. A CHANGES-NEEDED verdict sends the task back to `todo` until it is fixed and re-reviewed.
+- The reviewer reads the build and test commands from section 5 of `docs/SPEC.md`.
+
+You can also skip the agent file and just ask Claude to "spawn a subagent and follow the task-review skill for T-003"; the agent file adds restricted tools.
+
 ## Updating
 
-Edit `skills/spec-plus/SKILL.md` in this repo, then re-run the copy step (or `./install.sh`) and start a new Claude Code session.
+Edit the files under `.claude/` in this repo, then re-run `./install.sh` (or copy them again) and start a new Claude Code session.
