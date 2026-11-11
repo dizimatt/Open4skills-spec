@@ -34,7 +34,7 @@ Cover these topics in roughly this order, adapting wording to the project. Skip 
 7. **What "done" feels like** — how will the user know the MVP works and is good enough?
 8. **Edge cases and failure** — what should happen when things go wrong or input is odd? (Propose defaults.)
 9. **Type-specific questions** (pick 2-3 from the bank below).
-10. **Builder model and constraints** — which LLM builds it (Step 3), plus any required tools, platforms, languages, or things to avoid. Propose defaults based on what you can see in the repo.
+10. **Builder model and constraints** — which LLM builds it (Step 3), plus any required tools, platforms, languages, or things to avoid, and the commands to build and test it (or "none" for projects checked by playtest). Propose defaults based on what you can see in the repo.
 
 ### Type-specific question bank
 
@@ -89,14 +89,15 @@ Who uses it, and the main journey as numbered steps.
 Bullet list of things deliberately excluded from this version.
 
 ## 5. Constraints and technical notes
-Platforms, tools, limits, preferences. Keep short. Include the Builder model line.
+Platforms, tools, limits, preferences. Keep short. Include the Builder model line and a build/test line:
+`Build/test commands: <build command>; <test command>` (or `none - checked by playtest`). The `task-review` skill reads this line.
 
 ## 6. Assumptions and open questions
 - A-001 <assumption> — proposed default, needs confirmation
 - Q-001 <open question>
 
 ## 7. Task backlog
-- T-001 <task> — Requirements: R-001 — Status: todo
+- T-001 <task> — Requirements: R-001 — Status: todo | in-review | done
 - T-002 ...
 (Each task references at least one requirement ID. Order tasks so the earliest ones produce something runnable.)
 
@@ -134,7 +135,7 @@ Task card format in docs/TASKS.md:
 - Interface: exact signature(s) or data shape
 - Example: input -> expected output
 - Done when: runnable command, or observable playtest step
-- Status: todo
+- Status: todo | in-review | done
 ```
 
 Cards must not contradict SPEC.md. The spec wins if they differ.
@@ -155,6 +156,12 @@ For tiers B-D only, also:
 Task cards: docs/TASKS.md. Builder model and context limits are in SPEC section 5.
 ```
 
+If the `task-review` skill is in the project, also add this to `CLAUDE.md` (any tier):
+
+```
+Task review: after committing a task, the developer may say "review T-xxx". Run the task-review skill as a read-only subagent on that commit (see "Reviewing tasks" in the spec-plus skill).
+```
+
 If a local agent tool is named (Aider, Cline), tell the user to load docs/SPEC.md and the current task card as read-only context, since that tool will not read CLAUDE.md.
 
 ## Step 7: Review pass
@@ -164,6 +171,7 @@ Before presenting, re-read the spec as a sceptical reviewer and check:
 - No two requirements contradict each other.
 - Out-of-scope items are not smuggled back in as requirements.
 - Every assumption is listed in section 6.
+- Section 5 has a Build/test commands line.
 - The task order yields something runnable early.
 - For tiers B-D: every task has a card, each card names its files and a check, and no card exceeds the tier's size limit.
 
@@ -178,8 +186,20 @@ Ask the user to approve or request changes. On approval, set `Status: Approved` 
 
 Tell the user they can now say things like "build T-001" and you will work from `docs/SPEC.md` (and the task card, for tiers B-D). When building:
 - Reference requirement and task IDs in commit messages and test names.
-- Mark tasks `done` in the backlog (and the card) as they are completed and verified.
+- Commit each task on its own, with its task ID in the commit message, so it can be reviewed as a single commit.
+- Mark tasks `done` in the backlog (and the card) only after they are completed and verified. If the project uses the `task-review` skill, a committed task is `in-review` until the review returns PASS, then `done`.
 - If implementation reveals the spec is wrong or incomplete, say so, propose the spec change, and log it rather than silently drifting from the spec.
+
+## Reviewing tasks (optional)
+
+If the `task-review` skill is in the project, the developer can ask for a review of a committed task, for example "review T-003". Run it as a read-only subagent on that task's commit so the next task can proceed meanwhile. Rules:
+
+- Review only a committed task, and give the reviewer the commit, never "the latest changes".
+- Keep **one review in flight** at a time. Do not start a second until the first returns.
+- Only start the next task while a review is running if it does not depend on the task under review (no shared files or interfaces it changes). Otherwise wait for the verdict.
+- On **PASS**, set the task to `done` (backlog and card).
+- On **CHANGES-NEEDED**, set the task back to `todo`, fix the findings in a new commit that references the task ID, set it to `in-review`, and request a fresh review of the task's commits. Finish the fix before starting any other review.
+- If a finding shows the spec itself is wrong, propose a spec change and log it, as in the section above.
 
 ## If a spec already exists
 
