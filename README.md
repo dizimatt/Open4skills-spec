@@ -122,3 +122,7 @@ You can also skip the agent file and just ask Claude to "spawn a subagent and fo
 ## Updating
 
 Edit the files under `.claude/` in this repo, then re-run `./install.sh` (or copy them again) and start a new Claude Code session.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
